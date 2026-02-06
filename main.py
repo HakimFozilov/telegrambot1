@@ -34,36 +34,67 @@ message_queue = deque()
 # ================== REKLAMA FILTRI ==================
 def clean_ads(text):
     if not text: return ""
-    text = re.sub(r'https?://t\.me/\S+', '', text)
+    
+    # 1. Barcha turdagi havolalarni o'chirish (http, https, t.me, bit.ly va h.k.)
+    text = re.sub(r'https?://\S+', '', text)
+    
+    # 2. Telegram userneymlarini o'chirish (@username)
     text = re.sub(r'@\w+', '', text)
-    ad_words = ["kanalimizga a'zo", "obuna bo'ling", "batafsil o'qing", "manba:", "ssylka"]
-    for word in ad_words:
-        text = re.compile(re.escape(word), re.IGNORECASE).sub("", text)
+    
+    # 3. Ijtimoiy tarmoq nomlari va chaqiriq so'zlarni o'chirish (Katta-kichik harfga qaramaydi)
+    ad_patterns = [
+        r"kanalimizga a'zo", r"obuna bo'ling", r"batafsil o'qing", r"manba:", 
+        r"ssylka", r"instagram", r"youtube", r"facebook", r"tik tok", 
+        r"twitter", r"x\.com", r"telegramda kuzating", r"quyidagi havola"
+    ]
+    
+    for pattern in ad_patterns:
+        text = re.compile(pattern, re.IGNORECASE).sub("", text)
+    
+    # 4. Ortiqcha bo'shliqlar va chiziqlarni tozalash
+    text = re.sub(r'\n\s*\n', '\n\n', text) # Ketma-ket kelgan bo'sh qatorlarni bittaga tushiradi
     return text.strip()
 
 def add_sub_text(text):
-    return f"{text}\n\n👉 <a href='{TARGET_LINK}'>Kanalga obuna bo'ling</a>"
-
+    # Faqat toza matn bo'lsagina pastiga Sangzoruz1 havolasini qo'shadi
+    if text:
+        return f"{text}\n\n👉 <a href='{TARGET_LINK}'>Kanalga obuna bo'ling</a>"
+    return ""
+    
 # ================== NAVBATNI BOSHQARISH ==================
 async def post_manager():
     while True:
         now = datetime.now()
+        # Ish vaqti va navbatda xabar borligini tekshirish
         if (START_HOUR <= now.hour < END_HOUR) and message_queue:
-            msg_event = message_queue.popleft()
-            original_text = msg_event.message.message
-            cleaned_text = clean_ads(original_text)
+            logging.info(f"Navbatni bo'shatish boshlandi. Hozirgi navbat: {len(message_queue)}")
             
-            if cleaned_text:
-                final_text = add_sub_text(cleaned_text)
-                try:
-                    if msg_event.message.media:
-                        await client.send_file(TARGET_CHANNEL, msg_event.message.media, caption=final_text, parse_mode='html')
-                    else:
-                        await client.send_message(TARGET_CHANNEL, final_text, parse_mode='html', link_preview=False)
-                    logging.info("Xabar muvaffaqiyatli yuborildi.")
-                except Exception as e:
-                    logging.error(f"Yuborishda xatolik: {e}")
+            # Har 10 daqiqada maksimal 5 ta xabar yuborish
+            for _ in range(5):
+                if not message_queue: # Agar navbat bo'shab qolsa, to'xtash
+                    break
+                
+                msg_event = message_queue.popleft()
+                original_text = msg_event.message.message
+                cleaned_text = clean_ads(original_text)
+                
+                if cleaned_text:
+                    final_text = add_sub_text(cleaned_text)
+                    try:
+                        if msg_event.message.media:
+                            await client.send_file(TARGET_CHANNEL, msg_event.message.media, caption=final_text, parse_mode='html')
+                        else:
+                            await client.send_message(TARGET_CHANNEL, final_text, parse_mode='html', link_preview=False)
+                        logging.info("Xabar paket tarkibida yuborildi.")
+                    except Exception as e:
+                        logging.error(f"Yuborishda xatolik: {e}")
+                
+                # Paket ichidagi xabarlar orasida 3 soniya kutish (Telegram bloklamasligi uchun)
+                await asyncio.sleep(3)
+            
+            logging.info(f"Paket yuborildi. Qolgan navbat: {len(message_queue)}")
         
+        # Keyingi paketgacha 10 daqiqa kutish
         await asyncio.sleep(POST_INTERVAL)
 
 # ================== TELEGRAM HANDLER ==================
