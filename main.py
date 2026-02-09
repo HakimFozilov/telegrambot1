@@ -17,7 +17,7 @@ SOURCE_CHANNELS = [
     "shoubizyangiliklari", "pfcsogdianauz", "huquqiyaxborot", "u_generalissimus",
     "uzb_meteo", "xavfsizlik_uz", "qisqasitv", "davlatxizmatchisi_uz",
     "Jizzax_Haydovchilari", "uzgydromet", "uz24newsuz",
-    "bankxabar", "ozbekiston24", "Jizzax24kanal", "Chaqmoq", "Jizzaxjonuz", "Jizzax"
+    "bankxabar", "ozbekiston24", "Jizzax24kanal", 
 ]
 
 TARGET_CHANNEL = "@Sangzoruz1"
