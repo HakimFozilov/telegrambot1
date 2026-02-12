@@ -22,45 +22,31 @@ SOURCE_CHANNELS = [
 TARGET_CHANNEL = "@Sangzoruz1"
 TARGET_LINK = "https://t.me/Sangzoruz1"
 
-POST_INTERVAL = 900 # 15 daqiqa (Buni test uchun 60 qilib ko'ring)
+POST_INTERVAL = 600 # 10 daqiqa
 message_queue = deque()
-album_storage = {}
-pending_tasks = {}
+processed_albums = set() # Albumlarni filtr qilish uchun
 
 # ================== FILTR VA TOZALASH ==================
 def clean_ads(text):
     if not text: return ""
     
-    # 1. Havolalar va foydalanuvchi nomlarini o'chirish
+    # Havolalar va reklamalarni tozalash
     text = re.sub(r'https?://\S+', '', text)
     text = re.sub(r'@\w+', '', text)
     
-    # 2. To'liq o'chirib tashlanadigan reklama so'zlari
-    stop_words = [
-        "sotiladi", "choyxona", "benzin", "qazi", "zapravka", "uztelecom", 
-        "aksiya", "narxi", "pulingizni", "uy sotiladi", "ijaraga beriladi"
-    ]
+    stop_words = ["sotiladi", "choyxona", "benzin", "qazi", "zapravka", "uztelecom", "aksiya", "narxi"]
     for stop in stop_words:
         if stop.lower() in text.lower():
             return None
 
-    # 3. Reklama "quyruqlari"
-    ad_patterns = [
-        r"kanalga obuna bo'ling", r"a'zo bo'ling", r"batafsil o'qing", 
-        r"manba:", r"ssylka", r"instagram", r"youtube", r"facebook", 
-        r"tik tok", r"X\.com", r"telegramda kuzating", r"quyidagi havola", 
-        r"bizning guruh", r"rasmiy sahifa", r"eng tezkor xabar", r"yaqinlarga ulashing"
-    ]
+    ad_patterns = [r"kanalga obuna bo'ling", r"manba:", r"instagram", r"youtube", r"telegramda kuzating"]
     for pattern in ad_patterns:
         text = re.compile(pattern, re.IGNORECASE).sub("", text)
     
     text = re.sub(r'⚡️|📱|✅|👇', '', text)
-    text = re.sub(r'\n\s*\n', '\n\n', text) 
-    
     return text.strip()
 
 def add_sub_text(text):
-    if not text: return f"👉 <a href='{TARGET_LINK}'>Kanalga obuna bo'ling</a>"
     return f"{text}\n\n👉 <a href='{TARGET_LINK}'>Kanalga obuna bo'ling</a>"
 
 # ================== NAVBATNI BOSHQARISH ==================
@@ -69,35 +55,28 @@ async def post_manager():
     while True:
         try:
             if message_queue:
-                msg_data = message_queue.popleft()
+                msg_event = message_queue.popleft()
                 
-                # Media-gruppa (album) bo'lsa
-                if isinstance(msg_data, list):
-                    first_msg = msg_data[0]
-                    caption = clean_ads(first_msg.message.message)
-                    if caption is not None:
-                        final_caption = add_sub_text(caption)
-                        files = [m.message.media for m in msg_data if m.message.media]
-                        await client.send_file(TARGET_CHANNEL, files, caption=final_caption, parse_mode='html')
-                        logging.info("✅ OK: Media-gruppa yuborildi.")
+                raw_text = msg_event.message.message or ""
+                cleaned = clean_ads(raw_text)
                 
-                # Yakka xabar bo'lsa
+                if cleaned is not None:
+                    final_text = add_sub_text(cleaned)
+                    
+                    if msg_event.message.media:
+                        # Faqat bitta fayl yuborish (media group bo'lsa ham)
+                        await client.send_file(TARGET_CHANNEL, msg_event.message.media, caption=final_text, parse_mode='html')
+                    else:
+                        await client.send_message(TARGET_CHANNEL, final_text, parse_mode='html', link_preview=False)
+                    
+                    logging.info("✅ OK: Xabar yuborildi.")
+                    await asyncio.sleep(POST_INTERVAL)
                 else:
-                    raw_text = msg_data.message.message
-                    cleaned = clean_ads(raw_text)
-                    if cleaned is not None:
-                        final_text = add_sub_text(cleaned)
-                        if msg_data.message.media:
-                            await client.send_file(TARGET_CHANNEL, msg_data.message.media, caption=final_text, parse_mode='html')
-                        else:
-                            await client.send_message(TARGET_CHANNEL, final_text, parse_mode='html', link_preview=False)
-                        logging.info("✅ OK: Yakka xabar yuborildi.")
-                
-                await asyncio.sleep(POST_INTERVAL)
+                    logging.info("🚫 Reklama topildi, xabar tashlab ketildi.")
             else:
-                await asyncio.sleep(5) # Navbat bo'sh bo'lsa kutish
+                await asyncio.sleep(5)
         except Exception as e:
-            logging.error(f"🚨 Managerda xatolik: {e}")
+            logging.error(f"🚨 Managerda xatosi: {e}")
             await asyncio.sleep(10)
 
 # ================== TELEGRAM HANDLER ==================
@@ -105,43 +84,34 @@ client = TelegramClient(StringSession(SESSION_STRING), API_ID, API_HASH)
 
 @client.on(events.NewMessage(chats=SOURCE_CHANNELS))
 async def handler(event):
-    # Media-gruppa bo'lsa
+    # Agar xabar albumning bir qismi bo'lsa
     if event.message.grouped_id:
         gid = event.message.grouped_id
-        if gid not in album_storage:
-            album_storage[gid] = []
-            
-            async def wait_and_add(g_id):
-                await asyncio.sleep(5) # Barcha qismlarni kutish (5 sek yetarli)
-                if g_id in album_storage:
-                    message_queue.append(list(album_storage[g_id]))
-                    logging.info(f"📩 Album navbatga qo'shildi (ID: {g_id})")
-                    del album_storage[g_id]
-                    if g_id in pending_tasks: del pending_tasks[g_id]
-
-            if gid not in pending_tasks:
-                pending_tasks[gid] = asyncio.create_task(wait_and_add(gid))
-        
-        album_storage[gid].append(event)
-        
-    else:
-        # Yakka xabar
-        if event.message.message or event.message.media:
+        # Agar bu albumning birinchi kelgan qismi bo'lsa, qabul qilamiz
+        if gid not in processed_albums:
+            processed_albums.add(gid)
             message_queue.append(event)
-            logging.info(f"📩 Yangi xabar navbatga olindi.")
+            logging.info(f"📩 Album keldi, faqat birinchi qismi olindi.")
+            
+            # Xotirani tozalash (1 soatdan keyin album ID sini o'chiramiz)
+            async def clear_id(g_id):
+                await asyncio.sleep(3600)
+                processed_albums.discard(g_id)
+            asyncio.create_task(clear_id(gid))
+    else:
+        # Oddiy yakka xabar
+        message_queue.append(event)
+        logging.info(f"📩 Oddiy xabar navbatga olindi.")
 
 async def main():
     await client.start()
-    logging.info("🚀 Bot @Sangzoruz1 uchun muvaffaqiyatli ishga tushdi!")
+    print("🚀 Bot Sangzoruz1 uchun (Faqat bitta rasm rejimi) ishga tushdi...")
     client.loop.create_task(post_manager())
     await client.run_until_disconnected()
 
 if __name__ == "__main__":
-    logging.basicConfig(
-        level=logging.INFO, 
-        format='%(asctime)s - %(levelname)s - %(message)s'
-    )
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
     try:
         client.loop.run_until_complete(main())
     except KeyboardInterrupt:
-        print("Bot to'xtatildi.")
+        pass
