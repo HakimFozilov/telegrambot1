@@ -21,7 +21,7 @@ SOURCE_CHANNELS = [
     "bankxabar", "ozbekiston24", "Jizzax24kanal", 
 ]
 
-POST_INTERVAL = 60  # Sinov uchun 1 daqiqa (keyin 900 qilasiz)
+POST_INTERVAL = 600  # Sinov uchun 1 daqiqa (keyin 900 qilasiz)
 message_queue = deque()
 processed_albums = set()
 
@@ -53,31 +53,38 @@ def add_sub_text(text):
 
 # ================== NAVBATNI BOSHQARISH ==================
 async def post_manager():
-    logging.info("⚙️ Post manager navbatni tekshirishni boshladi...")
+    logging.info("⚙️ Post manager ishga tushdi...")
     while True:
         try:
             if message_queue:
-                msg_event = message_queue.popleft()
-                raw_text = msg_event.message.message or ""
-                cleaned = clean_ads(raw_text)
+                # Navbatdan 3 tadan 5 tagacha xabarni tanlab olish
+                import random
+                count = min(len(message_queue), random.randint(3, 5))
                 
-                if cleaned is not None:
-                    final_text = add_sub_text(cleaned)
+                for _ in range(count):
+                    if not message_queue: break
                     
-                    if msg_event.message.media:
-                        # Album bo'lsa ham faqat birinchi mediani yuboradi
-                        await client.send_file(TARGET_CHANNEL, msg_event.message.media, caption=final_text, parse_mode='html')
-                    else:
-                        await client.send_message(TARGET_CHANNEL, final_text, parse_mode='html', link_preview=False)
+                    msg_event = message_queue.popleft()
+                    raw_text = msg_event.message.message or ""
+                    cleaned = clean_ads(raw_text)
                     
-                    logging.info(f"✅ OK: Xabar @Sangzoruz1 kanaliga chiqdi.")
-                    await asyncio.sleep(POST_INTERVAL)
-                else:
-                    logging.info("🚫 Reklama aniqlandi, o'tkazib yuborildi.")
+                    if cleaned is not None:
+                        final_text = add_sub_text(cleaned)
+                        if msg_event.message.media:
+                            await client.send_file(TARGET_CHANNEL, msg_event.message.media, caption=final_text, parse_mode='html')
+                        else:
+                            await client.send_message(TARGET_CHANNEL, final_text, parse_mode='html', link_preview=False)
+                        
+                        logging.info(f"✅ Xabar yuborildi.")
+                        await asyncio.sleep(5) # Har bir xabar orasida 5 soniya kichik kutish
+                
+                # Paket yuborib bo'lingach, asosiy kutish vaqti
+                logging.info(f"😴 {POST_INTERVAL} soniya tanaffus...")
+                await asyncio.sleep(POST_INTERVAL)
             else:
-                await asyncio.sleep(10) # Navbat bo'sh bo'lsa 10 soniya kutish
+                await asyncio.sleep(10)
         except Exception as e:
-            logging.error(f"🚨 Yuborishda xatolik: {e}")
+            logging.error(f"🚨 Xato: {e}")
             await asyncio.sleep(20)
 
 # ================== TELEGRAM HANDLER ==================
@@ -122,4 +129,5 @@ if __name__ == "__main__":
     try:
         client.loop.run_until_complete(main())
     except KeyboardInterrupt:
+
         print("Bot to'xtatildi.")
