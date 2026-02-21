@@ -21,7 +21,7 @@ SOURCE_CHANNELS = [
 TARGET_CHANNEL = "@Sangzoruz1"
 TARGET_LINK = "https://t.me/Sangzoruz1"
 
-POST_INTERVAL = 600 
+POST_INTERVAL = 900 
 BATCH_SIZE = 5 
 message_queue = deque()
 processed_hashes = deque(maxlen=300)
@@ -33,7 +33,7 @@ def is_commercial_ad(text):
     if not text: return False
     # Reklama kalit so'zlari
     ad_keywords = [
-        r"sotiladi", r"яшаш шароити", r"ижара", r"манзил:", r"мўлжал", 
+        r"sotiladi", r"яшаш шароити", r"ижара", r"манзил:", r"мўлжал", r"балиқ", r"baliq", r"qazi",  r"saharlik",
         r"ошхона", r"кафе", r"ресторан", r"buyurtma berish", r"етказиб бериш",
         r"тел:", r"moshina", r"лизинг", r"кредит", r"хонадон", r"уй сотилади"
     ]
@@ -56,8 +56,8 @@ def clean_ads(text):
     ad_patterns = [
         r"Каналга обуна бўлинг", r"мухим хабарларни биринчи ўқинг", 
         r"энг тезкор хабарлар канали", r"аъзо бўлинг", r"Sahifalarimizga obuna bo‘ling",
-        r"Медиабанк", r"Facebook", r"TikTok", r"Instagram", r"YouTube", r"X.com",
-        r"YouTube", r"t.me", r"obuna bo'ling", r"reklama", r"САҚЛАБ ОЛИНГ",
+        r"Медиабанк", r"Facebook", r"TikTok", r"Instagram", r"YouTube", r"X.com", r"Telegram",
+        r"YouTube", r"t.me", r"obuna bo'ling", r"reklama", r"САҚЛАБ ОЛИНГ", r"Telegram", r"– га", 
         r"ЯҚИНЛАРГА ЮБОРИБ ҚЎЙИНГ", r"саҳифаларимизга", r"obuna bo‘ling"
     ]
     
@@ -151,4 +151,5 @@ if __name__ == "__main__":
     try:
         client.loop.run_until_complete(main())
     except KeyboardInterrupt:
+
         pass
