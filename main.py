@@ -13,15 +13,15 @@ SESSION_STRING = "1ApWapzMBuz9TNXmQxy3mkCwJh-Z9os-8Ij3N9CcKl_Xsym0Ec4y58BuoVvHJY
 
 ADMIN_ID = 3313699 
 SOURCE_CHANNELS = [
-    "Rasmiy_xabarlar_Official", "shmirziyoyev", "shoubizyangiliklari", 
-    "pfcsogdianauz", "huquqiyaxborot", "uzb_meteo", "xavfsizlik_uz", 
-    "qisqasitv", "Jizzax_Haydovchilari", "uzgydromet", "bankxabar", 
-    "ozbekiston24", "Jizzax24kanal"
+    "Rasmiy_xabarlar_Official", "shoubizyangiliklari", 
+    "huquqiyaxborot", "uzb_meteo", "xavfsizlik_uz", 
+    "qisqasitv", "Jizzax_Haydovchilari", "bankxabar", "Jurnalist24uz",
+     "Jizzax24kanal"
 ]
 TARGET_CHANNEL = "@Sangzoruz1"
 TARGET_LINK = "https://t.me/Sangzoruz1"
 
-POST_INTERVAL = 900 
+POST_INTERVAL = 1200 
 BATCH_SIZE = 5 
 message_queue = deque()
 processed_hashes = deque(maxlen=300)
@@ -33,9 +33,11 @@ def is_commercial_ad(text):
     if not text: return False
     # Reklama kalit so'zlari
     ad_keywords = [
-        r"sotiladi", r"яшаш шароити", r"ижара", r"манзил:", r"мўлжал", r"балиқ", r"baliq", r"qazi",  r"saharlik",
-        r"ошхона", r"кафе", r"ресторан", r"buyurtma berish", r"етказиб бериш",
-        r"тел:", r"moshina", r"лизинг", r"кредит", r"хонадон", r"уй сотилади"
+        r"sotiladi", r"яшаш шароити", r"ижара", r"манзил:", r"мўлжал", r"балиқ", r"baliq", r"qazi",  r"saharlik", r":
+📱 📱 📱  📱",
+        r"ошхона", r"кафе", r"ресторан", r"buyurtma berish", r"етказиб бериш", r"@Jurnalist24uz | тезкор ва ишончли",
+        r"тел:", r"moshina", r"лизинг", r"кредит", r"хонадон", r"уй сотилади", r"mdf", r"Каналга обуна булинг", r"Sahifalarimizga obuna bo‘ling:
+📱Telegram (https://t.me/qisqasitv) 📱Instagram (https://www.instagram.com/qisqasitv/) 📱 TikTok (https://www.tiktok.com/@qisqasitv?_r=1&_t=ZS-91MV6EE7Yll) 📱 YouTube (http://www.youtube.com/@qisqasitv)",
     ]
     for word in ad_keywords:
         if re.search(word, text, re.IGNORECASE):
@@ -153,3 +155,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
 
         pass
+
