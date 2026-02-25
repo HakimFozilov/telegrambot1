@@ -33,11 +33,13 @@ def is_commercial_ad(text):
     if not text: return False
     # Reklama kalit so'zlari
     ad_keywords = [
-        r"sotiladi", r"яшаш шароити", r"ижара", r"манзил:", r"мўлжал", r"балиқ", r"baliq", r"qazi",  r"saharlik", r":
-📱 📱 📱  📱",
-        r"ошхона", r"кафе", r"ресторан", r"buyurtma berish", r"етказиб бериш", r"@Jurnalist24uz | тезкор ва ишончли",
-        r"тел:", r"moshina", r"лизинг", r"кредит", r"хонадон", r"уй сотилади", r"mdf", r"Каналга обуна булинг", r"Sahifalarimizga obuna bo‘ling:
-📱Telegram (https://t.me/qisqasitv) 📱Instagram (https://www.instagram.com/qisqasitv/) 📱 TikTok (https://www.tiktok.com/@qisqasitv?_r=1&_t=ZS-91MV6EE7Yll) 📱 YouTube (http://www.youtube.com/@qisqasitv)",
+        r"sotiladi", r"яшаш шароити", r"ижара", r"манзил:", r"мўлжал", r"балиқ", 
+        r"baliq", r"qazi", r"saharlik", r"📱 📱 📱 📱",
+        r"ошхона", r"кафе", r"ресторан", r"buyurtma berish", r"етказиб бериш", 
+        r"@Jurnalist24uz | тезкор ва ишончли",
+        r"тел:", r"moshina", r"лизинг", r"кредит", r"хонадон", r"уй сотилади", 
+        r"mdf", r"Каналга обуна булинг", 
+        r"Sahifalarimizga obuna bo‘ling", r"qisqasitv", r"instagram\.com", r"tiktok\.com", r"youtube\.com"
     ]
     for word in ad_keywords:
         if re.search(word, text, re.IGNORECASE):
@@ -54,12 +56,12 @@ def clean_ads(text):
     # 2. Maxsus belgilarni tozalash (⚡️, 👇, ❗, 👈)
     text = re.sub(r'[⚡️👇❗👈👉✅🔹🔸➖]|\-\-\-', '', text)
     
-    # 3. Siz aytgan murakkab jumlalar (Kirill va Lotin)
+    # 3. Murakkab jumlalar (Kirill va Lotin)
     ad_patterns = [
         r"Каналга обуна бўлинг", r"мухим хабарларни биринчи ўқинг", 
         r"энг тезкор хабарлар канали", r"аъзо бўлинг", r"Sahifalarimizga obuna bo‘ling",
-        r"Медиабанк", r"Facebook", r"TikTok", r"Instagram", r"YouTube", r"X.com", r"Telegram",
-        r"YouTube", r"t.me", r"obuna bo'ling", r"reklama", r"САҚЛАБ ОЛИНГ", r"Telegram", r"– га", 
+        r"Медиабанк", r"Facebook", r"TikTok", r"Instagram", r"YouTube", r"X\.com", r"Telegram",
+        r"t\.me", r"obuna bo'ling", r"reklama", r"САҚЛАБ ОЛИНГ", r"– га", 
         r"ЯҚИНЛАРГА ЮБОРИБ ҚЎЙИНГ", r"саҳифаларимизга", r"obuna bo‘ling"
     ]
     
@@ -74,7 +76,6 @@ def get_message_hash(event):
     """Xabar mazmunidan hash olish (dublikatni oldini olish)"""
     content = ""
     if event.message.message:
-        # Matnning boshidagi 50 ta harfni olamiz (reklamadan tozalangan holda)
         clean_txt = clean_ads(event.message.message)[:50].lower()
         content += clean_txt
     if event.message.media:
@@ -87,7 +88,7 @@ def get_message_hash(event):
 # ================== NAVBATNI BOSHQARISH ==================
 
 async def post_manager():
-    await asyncio.sleep(10)
+    await asyncio.sleep(5)
     while True:
         if message_queue:
             for _ in range(BATCH_SIZE):
@@ -96,19 +97,16 @@ async def post_manager():
                 msg_event = message_queue.popleft()
                 raw_text = msg_event.message.message
                 
-                # Agar tijoriy reklama bo'lsa, tashlab ketamiz
                 if is_commercial_ad(raw_text):
-                    logging.info("🛑 Tijoriy reklama (osh/uy/kafe) aniqlandi, yuborilmadi.")
+                    logging.info("🛑 Tijoriy reklama aniqlandi, yuborilmadi.")
                     continue
 
                 clean_text = clean_ads(raw_text)
-                # Agar matn tozalashdan keyin bo'sh bo'lib qolsa, "Yangilik" deb qo'yamiz
                 final_text = clean_text if clean_text else "Yangilik"
                 final_text += f"\n\n👉 <a href='{TARGET_LINK}'>Sangzoruz1 - Kanalga obuna bo'ling</a>"
                 
                 try:
                     if msg_event.message.media:
-                        # Media fayllarni pereslat qilmaymiz, yuklab qayta jo'natamiz (reklama linklari ketmasligi uchun)
                         await client.send_file(TARGET_CHANNEL, msg_event.message.media, caption=final_text, parse_mode='html')
                     else:
                         await client.send_message(TARGET_CHANNEL, final_text, parse_mode='html', link_preview=False)
@@ -119,7 +117,7 @@ async def post_manager():
                 await asyncio.sleep(4)
             await asyncio.sleep(POST_INTERVAL)
         else:
-            await asyncio.sleep(20)
+            await asyncio.sleep(10)
 
 # ================== TELEGRAM HANDLER ==================
 
@@ -127,12 +125,10 @@ client = TelegramClient(StringSession(SESSION_STRING), API_ID, API_HASH)
 
 @client.on(events.NewMessage(chats=SOURCE_CHANNELS))
 async def handler(event):
-    # Faqat Rasm, Video yoki Matn bo'lsa olamiz
     has_media = event.message.photo or event.message.video
     has_text = event.message.message and len(event.message.message) > 5
 
     if has_media or has_text:
-        # Dublikat tekshiruvi
         m_hash = get_message_hash(event)
         if m_hash in processed_hashes:
             logging.info("♻️ Dublikat xabar (rad etildi).")
@@ -144,7 +140,7 @@ async def handler(event):
 
 async def main():
     await client.start()
-    print("🚀 Bot ishlamoqda. Reklama va dublikatlar filtrlanadi...")
+    print("🚀 Bot ishlamoqda...")
     client.loop.create_task(post_manager())
     await client.run_until_disconnected()
 
@@ -153,6 +149,4 @@ if __name__ == "__main__":
     try:
         client.loop.run_until_complete(main())
     except KeyboardInterrupt:
-
         pass
-
