@@ -9,16 +9,14 @@ from telethon.sessions import StringSession
 # ================== SOZLAMALAR ==================
 API_ID = 25573417
 API_HASH = "b56082f4d86578c5a6948c7b964008f9"
-# Session stringdagi ortiqcha bo'shliqlarni olib tashlaymiz
 SESSION_STRING = "1ApWapzMBuz9TNXmQxy3mkCwJh-Z9os-8Ij3N9CcKl_Xsym0Ec4y58BuoVvHJYzbmJRTwsFAolCd8H6rVKxSGYDoO7EkpA17Sy-OPCMqaf_CW1iv-Tud0qveqIVnb-cWyMw7KWPJER5m4JJCEAOTVQCcXA5v2nUr3AcIxyFPsNLNEAQYPO88NPnOp0G0WA6TdoxgdzvtqZlKMVoAvKLdPfH3rfsSP2D8g7cntDfX1iDWSD7Qd-gcLf9ahSEUPPTYcObdsgPLNoX1BDSM9Zy5ZoUjx7iiaLWfPVIepyUUbsL1lhxzFKJCgyj4TH1hZynuD30KaS1ul0srMnwiLEqt7R6wiTkZX554=".strip()
 
 ADMIN_ID = 3313699 
-# XATO TUZATILDI: Kanallar oldiga @ belgisi qo'shildi
 SOURCE_CHANNELS = [
     "@Rasmiy_xabarlar_Official", "@shoubizyangiliklari", 
     "@huquqiyaxborot", "@uzb_meteo", "@xavfsizlik_uz", 
-    "@qisqasitv", "@Jizzax_Haydovchilari", "@bankxabar", "@Jurnalist24uz",
-    "@Jizzax24kanal"
+    "@qisqasitv", "@Jizzax_Haydovchilari", "@bankxabar", 
+    "@Jurnalist24uz", "@Jizzax24kanal"
 ]
 TARGET_CHANNEL = "@Sangzoruz1"
 TARGET_LINK = "https://t.me/Sangzoruz1"
@@ -47,10 +45,8 @@ def is_commercial_ad(text):
 
 def clean_ads(text):
     if not text: return ""
-    # Linklar va userlarni tozalash
     text = re.sub(r'https?://\S+', '', text)
     text = re.sub(r'@\w+', '', text)
-    # Belgilarni tozalash
     text = re.sub(r'[⚡️👇❗👈👉✅🔹🔸➖]|\-\-\-', '', text)
     
     ad_patterns = [
@@ -69,18 +65,16 @@ def clean_ads(text):
 def get_message_hash(event):
     content = ""
     if event.message.message:
-        # Faqat matnli qismidan hash olish
         clean_txt = clean_ads(event.message.message)[:50].lower()
         content += clean_txt
     if event.message.media:
-        # Media turiga qarab ID qo'shish
         if hasattr(event.message.media, 'document'):
             content += str(event.message.media.document.id)
         elif hasattr(event.message.media, 'photo'):
             content += str(event.message.media.photo.id)
     return hashlib.md5(content.encode()).hexdigest()
 
-# ================== NAVBATNI BOSHQARISH (FILTRLANGAN) ==================
+# ================== NAVBATNI BOSHQARISH (YANGILANGAN) ==================
 
 async def post_manager():
     await asyncio.sleep(5)
@@ -92,20 +86,21 @@ async def post_manager():
                 msg_event = message_queue.popleft()
                 raw_text = msg_event.message.message or ""
                 
-                # 1. Tijoriy reklamani tekshirish
+                # 1. Reklama tekshiruvi
                 if is_commercial_ad(raw_text):
-                    logging.info("🛑 Tijoriy reklama aniqlandi, tashlab ketildi.")
+                    logging.info("🛑 Reklama aniqlandi, tashlab ketildi.")
                     continue
 
                 # 2. Matnni tozalash
                 clean_text = clean_ads(raw_text)
                 
-                # 3. MUHIM: Agar tozalashdan keyin matn bo'sh bo'lsa, xabarni yubormaslik
-                if not clean_text or len(clean_text) < 3:
-                    logging.info("⚠️ Foydali matn qolmagani uchun xabar yuborilmadi.")
+                # 3. FILTR: Agar matn bo'sh bo'lsa yoki juda qisqa bo'lsa yubormaslik
+                # Bu yerda "Yangilik" so'zi ham olib tashlandi.
+                if not clean_text or len(clean_text) < 5:
+                    logging.info("⚠️ Foydali matn qolmagani uchun xabar bekor qilindi.")
                     continue
 
-                # 4. Yuboriladigan matnni tayyorlash
+                # 4. Yuborish uchun caption tayyorlash
                 final_caption = f"{clean_text}\n\n👉 <a href='{TARGET_LINK}'>Sangzoruz1 - Kanalga obuna bo'ling</a>"
                 
                 try:
@@ -114,7 +109,7 @@ async def post_manager():
                     else:
                         await client.send_message(TARGET_CHANNEL, final_caption, parse_mode='html', link_preview=False)
                     
-                    logging.info("✅ OK: Foydali xabar kanalga yuborildi.")
+                    logging.info("✅ OK: Toza xabar kanalga yuborildi.")
                 except Exception as e:
                     logging.error(f"❌ Xato: {e}")
                 
@@ -129,7 +124,6 @@ client = TelegramClient(StringSession(SESSION_STRING), API_ID, API_HASH)
 
 @client.on(events.NewMessage(chats=SOURCE_CHANNELS))
 async def handler(event):
-    # Xabarda matn yoki media borligini aniqroq tekshirish
     has_media = event.message.media is not None
     has_text = bool(event.message.message and len(event.message.message) > 5)
 
@@ -140,13 +134,11 @@ async def handler(event):
         
         processed_hashes.append(m_hash)
         message_queue.append(event)
-        logging.info(f"📩 Navbatga qo'shildi. (Jami: {len(message_queue)})")
+        logging.info(f"📩 Navbatga olindi. (Navbatda: {len(message_queue)})")
 
 async def main():
-    # Sessiyani boshlash
     await client.start()
-    print("🚀 Bot ishga tushdi...")
-    # Post managerni alohida task qilib ishga tushirish
+    print("🚀 Bot ishlamoqda...")
     asyncio.create_task(post_manager())
     await client.run_until_disconnected()
 
@@ -155,6 +147,4 @@ if __name__ == "__main__":
     try:
         client.loop.run_until_complete(main())
     except KeyboardInterrupt:
-        print("🛑 Bot to'xtatildi.")
-
-
+        print("🛑 To'xtatildi.")
