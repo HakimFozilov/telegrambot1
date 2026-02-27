@@ -23,7 +23,7 @@ SOURCE_CHANNELS = [
 TARGET_CHANNEL = "@Sangzoruz1"
 TARGET_LINK = "https://t.me/Sangzoruz1"
 
-POST_INTERVAL = 1200 
+POST_INTERVAL = 1000 
 BATCH_SIZE = 5 
 message_queue = deque()
 processed_hashes = deque(maxlen=300)
@@ -36,8 +36,8 @@ def is_commercial_ad(text):
         r"sotiladi", r"яшаш шароити", r"ижара", r"манзил:", r"мўлжал", r"балиқ", 
         r"baliq", r"qazi", r"saharlik", r"📱 📱 📱 📱",
         r"ошхона", r"кафе", r"ресторан", r"buyurtma berish", r"етказиб бериш", 
-        r"@Jurnalist24uz", r"тел:", r"moshina", r"лизинг", r"кредит", 
-        r"хонадон", r"уй сотилади", r"mdf", r"Каналга обуна булинг", 
+        r"@Jurnalist24uz", r"тел:", r"moshina", r"лизинг", r"кредит", r"avaz oxun",
+        r"хонадон", r"уй сотилади", r"mdf", r"Каналга обуна булинг", r"texnomart", 
         r"Sahifalarimizga obuna bo‘ling", r"qisqasitv", r"instagram\.com", r"tiktok\.com", r"youtube\.com"
     ]
     for word in ad_keywords:
@@ -80,7 +80,7 @@ def get_message_hash(event):
             content += str(event.message.media.photo.id)
     return hashlib.md5(content.encode()).hexdigest()
 
-# ================== NAVBATNI BOSHQARISH ==================
+# ================== NAVBATNI BOSHQARISH (FILTRLANGAN) ==================
 
 async def post_manager():
     await asyncio.sleep(5)
@@ -92,23 +92,31 @@ async def post_manager():
                 msg_event = message_queue.popleft()
                 raw_text = msg_event.message.message or ""
                 
+                # 1. Tijoriy reklamani tekshirish
                 if is_commercial_ad(raw_text):
-                    logging.info("🛑 Reklama filtri ishladi.")
+                    logging.info("🛑 Tijoriy reklama aniqlandi, tashlab ketildi.")
                     continue
 
+                # 2. Matnni tozalash
                 clean_text = clean_ads(raw_text)
-                final_text = clean_text if clean_text else "Yangilik"
-                final_text += f"\n\n👉 <a href='{TARGET_LINK}'>Sangzoruz1 - Kanalga obuna bo'ling</a>"
+                
+                # 3. MUHIM: Agar tozalashdan keyin matn bo'sh bo'lsa, xabarni yubormaslik
+                if not clean_text or len(clean_text) < 3:
+                    logging.info("⚠️ Foydali matn qolmagani uchun xabar yuborilmadi.")
+                    continue
+
+                # 4. Yuboriladigan matnni tayyorlash
+                final_caption = f"{clean_text}\n\n👉 <a href='{TARGET_LINK}'>Sangzoruz1 - Kanalga obuna bo'ling</a>"
                 
                 try:
-                    # Media borligini tekshirish
                     if msg_event.message.media:
-                        await client.send_file(TARGET_CHANNEL, msg_event.message.media, caption=final_text, parse_mode='html')
+                        await client.send_file(TARGET_CHANNEL, msg_event.message.media, caption=final_caption, parse_mode='html')
                     else:
-                        await client.send_message(TARGET_CHANNEL, final_text, parse_mode='html', link_preview=False)
-                    logging.info("✅ Xabar yuborildi.")
+                        await client.send_message(TARGET_CHANNEL, final_caption, parse_mode='html', link_preview=False)
+                    
+                    logging.info("✅ OK: Foydali xabar kanalga yuborildi.")
                 except Exception as e:
-                    logging.error(f"❌ Yuborishda xato: {e}")
+                    logging.error(f"❌ Xato: {e}")
                 
                 await asyncio.sleep(4)
             await asyncio.sleep(POST_INTERVAL)
@@ -148,3 +156,4 @@ if __name__ == "__main__":
         client.loop.run_until_complete(main())
     except KeyboardInterrupt:
         print("🛑 Bot to'xtatildi.")
+
