@@ -23,7 +23,7 @@ SOURCE_CHANNELS = [
 TARGET_CHANNEL = "@Sangzoruz1"
 TARGET_LINK = "https://t.me/Sangzoruz1"
 
-POST_INTERVAL = 1000 
+POST_INTERVAL = 900 
 BATCH_SIZE = 5 
 message_queue = deque()
 processed_hashes = deque(maxlen=300)
@@ -156,4 +156,5 @@ if __name__ == "__main__":
         client.loop.run_until_complete(main())
     except KeyboardInterrupt:
         print("🛑 Bot to'xtatildi.")
+
 
