@@ -11,7 +11,7 @@ API_ID = 25573417
 API_HASH = "b56082f4d86578c5a6948c7b964008f9"
 SESSION_STRING = "1ApWapzMBu7KfgSHwylqE7IzsSisxdl4jaYWYnEfzHUXa_ij1kkO_hP6w8mdyqVLY_PrIeqSmFkPp-0y6pUjneZpMBC4_BbTaZMVTttj9Mpbi7jbW4_XnuO2gZn8UyjyqmKMpJXdfdaox1w3qgiiAknrgHTWiqzi675c-KmVFvFOO_UbqgL3Jv3B5WdwwyqbVnXZdRNadBS6rn0Hc_vqYAezZ8Hn3Ypvf5c1ki77ieriwBJSDn_pPkboSFRln3O1ChUlJcJ7zrZbBd1PCkOxKPSH5ZPn_Cxbloy3M9rwCPXMzaScZ7YqtF31be1s3w8JpjXptQhZb4rxgrrvWlSKhQAxfcfAW_Q8=".strip()
 
-ADMIN_ID = 3313699 
+ADMIN_ID = 5747999018 
 SOURCE_CHANNELS = [
     "@Rasmiy_xabarlar_Official", "@shoubizyangiliklari", 
     "@huquqiyaxborot", "@uzb_meteo", "@xavfsizlik_uz", 
@@ -21,7 +21,7 @@ SOURCE_CHANNELS = [
 TARGET_CHANNEL = "@Sangzoruz1"
 TARGET_LINK = "https://t.me/Sangzoruz1"
 
-POST_INTERVAL = 900 
+POST_INTERVAL = 750 
 BATCH_SIZE = 5 
 message_queue = deque()
 processed_hashes = deque(maxlen=300)
