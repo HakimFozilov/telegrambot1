@@ -9,7 +9,7 @@ from telethon.sessions import StringSession
 # ================== SOZLAMALAR ==================
 API_ID = 25573417
 API_HASH = "b56082f4d86578c5a6948c7b964008f9"
-SESSION_STRING = "1ApWapzMBuz9TNXmQxy3mkCwJh-Z9os-8Ij3N9CcKl_Xsym0Ec4y58BuoVvHJYzbmJRTwsFAolCd8H6rVKxSGYDoO7EkpA17Sy-OPCMqaf_CW1iv-Tud0qveqIVnb-cWyMw7KWPJER5m4JJCEAOTVQCcXA5v2nUr3AcIxyFPsNLNEAQYPO88NPnOp0G0WA6TdoxgdzvtqZlKMVoAvKLdPfH3rfsSP2D8g7cntDfX1iDWSD7Qd-gcLf9ahSEUPPTYcObdsgPLNoX1BDSM9Zy5ZoUjx7iiaLWfPVIepyUUbsL1lhxzFKJCgyj4TH1hZynuD30KaS1ul0srMnwiLEqt7R6wiTkZX554=".strip()
+SESSION_STRING = "1ApWapzMBu7KfgSHwylqE7IzsSisxdl4jaYWYnEfzHUXa_ij1kkO_hP6w8mdyqVLY_PrIeqSmFkPp-0y6pUjneZpMBC4_BbTaZMVTttj9Mpbi7jbW4_XnuO2gZn8UyjyqmKMpJXdfdaox1w3qgiiAknrgHTWiqzi675c-KmVFvFOO_UbqgL3Jv3B5WdwwyqbVnXZdRNadBS6rn0Hc_vqYAezZ8Hn3Ypvf5c1ki77ieriwBJSDn_pPkboSFRln3O1ChUlJcJ7zrZbBd1PCkOxKPSH5ZPn_Cxbloy3M9rwCPXMzaScZ7YqtF31be1s3w8JpjXptQhZb4rxgrrvWlSKhQAxfcfAW_Q8=".strip()
 
 ADMIN_ID = 3313699 
 SOURCE_CHANNELS = [
