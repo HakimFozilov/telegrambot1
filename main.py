@@ -7,11 +7,11 @@ from telethon import TelegramClient, events
 from telethon.sessions import StringSession
 
 # ================== SOZLAMALAR ==================
-API_ID = 25573417
-API_HASH = "b56082f4d86578c5a6948c7b964008f9"
-SESSION_STRING = "1ApWapzMBu7KfgSHwylqE7IzsSisxdl4jaYWYnEfzHUXa_ij1kkO_hP6w8mdyqVLY_PrIeqSmFkPp-0y6pUjneZpMBC4_BbTaZMVTttj9Mpbi7jbW4_XnuO2gZn8UyjyqmKMpJXdfdaox1w3qgiiAknrgHTWiqzi675c-KmVFvFOO_UbqgL3Jv3B5WdwwyqbVnXZdRNadBS6rn0Hc_vqYAezZ8Hn3Ypvf5c1ki77ieriwBJSDn_pPkboSFRln3O1ChUlJcJ7zrZbBd1PCkOxKPSH5ZPn_Cxbloy3M9rwCPXMzaScZ7YqtF31be1s3w8JpjXptQhZb4rxgrrvWlSKhQAxfcfAW_Q8=".strip()
+API_ID = 34696814
+API_HASH = "f6c213e017169b70c8465143d1751ea2"
+SESSION_STRING = "1ApWapzMBu8B7W6OmcgHjwN2K09ZCsYMtC7RTmAKplo-84c9n4NLFEwklYZCUzO-IOmPHtGDGAeWvnu2gln-mcrLznvk3gbZpyyGLh9remfxX7D8ifanj8FjfyDDcRK52aKom-NlXNwHR5vqXHca72GskI1xQMWAj7rg2hqMwI_bKNely-AGk-fCa5nf8L0bgpACheTWEmQvAQXlxwI2dKKdfmK4dVBS2e15SsX1qQuS5a_0e7vF3-qtVhkvBrJe3KktB3BGpY9Y45IxoQY8gQzLQMz8n8jvTBp7XYXsfGtyRAYdxDokuqEGKVb_9lT9GwgEOJ_S9gqbx18ktoaijuS7uSWSj50A=".strip()
 
-ADMIN_ID = 5747999018 
+ADMIN_ID = 5747999018
 SOURCE_CHANNELS = [
     "@Rasmiy_xabarlar_Official", "@shoubizyangiliklari", 
     "@huquqiyaxborot", "@uzb_meteo", "@xavfsizlik_uz", 
@@ -21,7 +21,7 @@ SOURCE_CHANNELS = [
 TARGET_CHANNEL = "@Sangzoruz1"
 TARGET_LINK = "https://t.me/Sangzoruz1"
 
-POST_INTERVAL = 750 
+POST_INTERVAL = 10 
 BATCH_SIZE = 5 
 message_queue = deque()
 processed_hashes = deque(maxlen=300)
@@ -35,8 +35,8 @@ def is_commercial_ad(text):
         r"baliq", r"qazi", r"saharlik", r"📱 📱 📱 📱",
         r"ошхона", r"кафе", r"ресторан", r"buyurtma berish", r"етказиб бериш", 
         r"@Jurnalist24uz", r"тел:", r"moshina", r"лизинг", r"кредит", r"avaz oxun",
-        r"хонадон", r"уй сотилади", r"mdf", r"Каналга обуна булинг", r"texnomart", 
-        r"Sahifalarimizga obuna bo‘ling", r"qisqasitv", r"instagram\.com", r"tiktok\.com", r"youtube\.com"
+        r"хонадон", r"уй сотилади", r"mdf", r"Каналга обуна булинг", r"texnomart", r"Каналга қўшилиш 
+ |  |",  r"Sahifalarimizga obuna bo‘ling", r"qisqasitv", r"instagram\.com", r"tiktok\.com", r"youtube\.com"
     ]
     for word in ad_keywords:
         if re.search(word, text, re.IGNORECASE):
